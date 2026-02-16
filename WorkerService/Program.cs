@@ -6,21 +6,6 @@ using WorkerService.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-
-
-// builder.Services.AddSingleton(settings);
-// builder.Services.AddScoped<IPowerService, PowerService>();
-// builder.Services.AddScoped<IPowerTradeProcessor, PowerTradeProcessor>();
-// builder.Services.AddScoped<ICsvExportService, CsvExportService>();
-// builder.Services.AddHostedService<Worker>();
-
-// var host = builder.Build();
-
-// var logger = loggerFactory.CreateLogger<ILogger<Program>>();
-
-//var logger = host.Services.GetRequiredService<ILogger<Program>>();
-// logger.LogInformation($"Starting Power Position Service - Interval: {settings.IntervalMinutes}min, Output: {settings.OutputFolder}, Logs: {settings.LoggingDirectory}");
-
 try
 {
     var host = Host.CreateDefaultBuilder(args)
@@ -51,8 +36,6 @@ try
 
             var logFilePath = Path.Combine(loggingDirectory, "PowerPosition.log");
 
-            // Configure Serilog
-
             Directory.CreateDirectory("logs");
 
             Log.Logger = new LoggerConfiguration()
@@ -65,7 +48,7 @@ try
                     "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level}] {SourceContext} {Message}{NewLine}{Exception}")
                 .CreateLogger();
 
-            // Create LoggerFactory that uses Serilog
+            
             using var loggerFactory = LoggerFactory.Create(builder =>
             {
                 builder.ClearProviders();           

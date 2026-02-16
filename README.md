@@ -4,15 +4,14 @@ A .NET worker service for extracting and aggregating power trade positions from 
 
 ## Prerequisites
 
-- .NET 10.0 SDK or later
-- Windows, macOS, or Linux
+- .NET 9.0 SDK 
 
 ## Installation
 
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/mhatre512sonali-source/PowerPositionReporter.git
 cd PowerPositionReporter
 ```
 
@@ -72,15 +71,6 @@ cd WorkerService
 dotnet run
 ```
 
-### Command-Line Arguments
-
-```bash
-dotnet run -- --interval 5 --output /path/to/output
-```
-
-- `--interval`: Extraction interval in minutes (default: 1)
-- `--output`: Output folder path for CSV files (default: ./output)
-
 ## Testing
 
 Run all unit tests:
@@ -96,16 +86,16 @@ Configuration can be set via:
 
 1. **appsettings.json** - Default configuration file
 2. **appsettings.Development.json** - Development-specific settings
-3. **Command-line arguments** - Override settings at runtime
 
 ### Example appsettings.json
 
 ```json
 {
   "PowerPositionSettings": {
-    "IntervalMinutes": 1,
+    "IntervalMinutes": 60,
     "OutputFolder": "./output",
-    "TimeZoneId": "Europe/London"
+    "TimeZoneId": "Europe/London",
+    "LoggingDirectory": "./logs"
   }
 }
 ```
@@ -124,7 +114,8 @@ PowerPositionReporter/
 │       ├── PowerTradeProcessor.cs
 │       └── CsvExportService.cs
 └── PowerPositionTest/
-    └── UnitTest1.cs            # Unit tests
+    └── CsvExportServiceTests.cs      
+    └── PowerTradeProcessorTests.cs      
 ```
 
 ## Features
@@ -162,6 +153,7 @@ builder.Services.AddSingleton(settings);
 builder.Services.AddScoped<PowerService>();
 builder.Services.AddScoped<IPowerTradeProcessor, PowerTradeProcessor>();
 builder.Services.AddScoped<ICsvExportService, CsvExportService>();
+builder.services.AddHostedService<Worker>();
 ```
 
 ### Missing Output Folder
