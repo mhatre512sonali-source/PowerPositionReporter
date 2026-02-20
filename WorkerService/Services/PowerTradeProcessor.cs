@@ -2,6 +2,7 @@ using Axpo;
 using NodaTime;
 using WorkerService.Interfaces;
 using System.Globalization;
+using WorkerService.Configuration;
 
 namespace WorkerService.Services
 {
@@ -9,15 +10,18 @@ namespace WorkerService.Services
     {
         private readonly IPowerService _powerService;
         private readonly ILogger<PowerTradeProcessor> _logger;
+        private readonly PowerPositionSettings _settings;
         private readonly IDateTimeZoneProvider _timeZoneProvider;
 
         public PowerTradeProcessor(
             IPowerService powerService,
-            ILogger<PowerTradeProcessor> logger)
+            ILogger<PowerTradeProcessor> logger,
+            PowerPositionSettings settings)
         {
             _powerService = powerService;
             _logger = logger;
             _timeZoneProvider = DateTimeZoneProviders.Tzdb;
+            _settings = settings;
         }
 
         public async Task<Dictionary<int, double>> ProcessTradesAsync(DateTime date)
@@ -33,7 +37,7 @@ namespace WorkerService.Services
                 _logger.LogInformation($"[PowerTradeProcessor] Trade IDs: {string.Join(", ", tradeList.Select(t => t.TradeId))}");
 
                 var aggregated = new Dictionary<int, double>();
-                var timeZone = _timeZoneProvider["Europe/London"];
+                //var timeZone = _timeZoneProvider[_settings.TimeZoneId];
                
                 var startOfTradingDay = date.Date.AddHours(-1);
 

@@ -8,7 +8,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly PowerPositionSettings _settings;
-    private Timer? _timer;
+    private PeriodicTimer? _timer;
 
     public Worker(
             ILogger<Worker> logger,
@@ -31,12 +31,12 @@ public class Worker : BackgroundService
             await PerformExtractionAsync();
 
             var intervalMs = _settings.IntervalMinutes * 60 * 1000;
-            _timer = new Timer(
-                callback: async state => await PerformExtractionAsync(),
-                state: null,
-                dueTime: TimeSpan.FromMilliseconds(intervalMs),
-                period: TimeSpan.FromMilliseconds(intervalMs)
-            );
+            _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(intervalMs));
+
+            while (await _timer.WaitForNextTickAsync(stoppingToken))
+            {
+                await PerformExtractionAsync();
+            }
 
             _logger.LogInformation($"[Worker] Extractions scheduled every {_settings.IntervalMinutes} minutes");
 
@@ -88,6 +88,7 @@ public class Worker : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"[Worker] [{executionTime:yyyy-MM-dd HH:mm:ss}] Extraction cycle failed");
+                throw; 
             }
         }
     

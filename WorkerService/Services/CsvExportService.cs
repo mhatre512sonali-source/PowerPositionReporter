@@ -1,6 +1,7 @@
 using NodaTime;
 using Axpo;
 using WorkerService.Interfaces;
+using WorkerService.Configuration;
 
 namespace WorkerService.Services
 {
@@ -8,11 +9,13 @@ namespace WorkerService.Services
     {
         private readonly ILogger<CsvExportService> _logger;
         private readonly IDateTimeZoneProvider _timeZoneProvider;
+        private readonly PowerPositionSettings _settings;
 
-        public CsvExportService(ILogger<CsvExportService> logger)
+        public CsvExportService(ILogger<CsvExportService> logger, PowerPositionSettings settings)
         {
             _logger = logger;
             _timeZoneProvider = DateTimeZoneProviders.Tzdb;
+            _settings = settings;
         }
 
         public async Task ExportAsync(Dictionary<int, double> aggregatedTrades, string outputFolder)
@@ -31,7 +34,7 @@ namespace WorkerService.Services
                     _logger.LogDebug($"[CsvExportService] Output folder already exists: {outputFolder}");
                 }
 
-                var tz = _timeZoneProvider["Europe/London"];
+                var tz = _timeZoneProvider[_settings.TimeZoneId];
                 var now = SystemClock.Instance.GetCurrentInstant().InZone(tz).LocalDateTime;
 
                 var filename = $"PowerPosition_{now.Year:D4}{now.Month:D2}{now.Day:D2}_{now.Hour:D2}{now.Minute:D2}.csv";
