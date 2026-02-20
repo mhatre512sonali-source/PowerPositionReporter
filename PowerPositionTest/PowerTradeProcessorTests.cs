@@ -7,17 +7,32 @@ using Xunit.Sdk;
 
 namespace PowerPositionTest;
 
+[Collection("PowerPositionTests")]
 public class PowerTradeProcessorTests
 {
+    private PowerPositionSettings settings;
+    private Mock<ILogger<PowerTradeProcessor>> loggerMock;
+    private Mock<IPowerService> powerServiceMock;
+    private PowerTradeProcessor processor;
+
+    public PowerTradeProcessorTests()
+    {
+        settings = new PowerPositionSettings
+        {
+            OutputFolder = Path.Combine(Path.GetTempPath(), $"test_output_{Guid.NewGuid()}"),
+            TimeZoneId = "Europe/London"
+        };
+        loggerMock = new Mock<ILogger<PowerTradeProcessor>>();
+        powerServiceMock = new Mock<IPowerService>();
+        processor = new PowerTradeProcessor(powerServiceMock.Object, loggerMock.Object, settings);
+    }
+
     [Theory]
     [InlineData(2)]
     [InlineData(5)]
     [InlineData(15)]
     public async Task ProcessTradesAsync_WithValidTrades_ReturnsAggregatedVolumes(int period)
     {
-        // Arrange
-        var loggerMock = new Mock<ILogger<PowerTradeProcessor>>();
-        var powerServiceMock = new Mock<IPowerService>();
 
         List<PowerTrade> listPowerTrades = GetListOfPowerTrades(period);
 
@@ -25,12 +40,8 @@ public class PowerTradeProcessorTests
             .Setup(x => x.GetTradesAsync(It.IsAny<DateTime>()))
             .ReturnsAsync(listPowerTrades);
 
-        var processor = new PowerTradeProcessor(powerServiceMock.Object, loggerMock.Object);
-
-        // Act
         var result = await processor.ProcessTradesAsync(DateTime.Now);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Equal(period, result.Count);
 
@@ -46,20 +57,12 @@ public class PowerTradeProcessorTests
     [Fact]
     public async Task ProcessTradesAsync_WithEmptyTrades_ReturnsEmptyDictionary()
     {
-        // Arrange
-        var loggerMock = new Mock<ILogger<PowerTradeProcessor>>();
-        var powerServiceMock = new Mock<IPowerService>();
-
         powerServiceMock
             .Setup(x => x.GetTradesAsync(It.IsAny<DateTime>()))
             .ReturnsAsync(new List<PowerTrade>());
 
-        var processor = new PowerTradeProcessor(powerServiceMock.Object, loggerMock.Object);
-
-        // Act
         var result = await processor.ProcessTradesAsync(DateTime.Now);
 
-        // Assert
         Assert.NotNull(result);
         Assert.Empty(result);
     }
@@ -67,10 +70,6 @@ public class PowerTradeProcessorTests
     [Fact]
     public async Task ProcessTradesAsync_LogsInformation()
     {
-        // Arrange
-        var loggerMock = new Mock<ILogger<PowerTradeProcessor>>();
-        var powerServiceMock = new Mock<IPowerService>();
-
         var trades = new List<PowerTrade>();
         trades.Add(PowerTrade.Create(DateTime.Now.Date, 10));
 
@@ -78,19 +77,15 @@ public class PowerTradeProcessorTests
             .Setup(x => x.GetTradesAsync(It.IsAny<DateTime>()))
             .ReturnsAsync(trades);
 
-        var processor = new PowerTradeProcessor(powerServiceMock.Object, loggerMock.Object);
-
-        // Act
         await processor.ProcessTradesAsync(DateTime.Now);
 
-        // Assert
         loggerMock.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
                 It.IsAny<It.IsAnyType>(),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.AtLeastOnce);
     }
 

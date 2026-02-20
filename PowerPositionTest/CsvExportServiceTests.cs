@@ -1,36 +1,44 @@
 ﻿
 using Microsoft.Extensions.Logging;
 
+[Collection("PowerPositionTests")]
 public class CsvExportServiceTests
 {
+    private PowerPositionSettings settings;
+    private Mock<ILogger<CsvExportService>> loggerMock;
+    private CsvExportService service;
+
+    public CsvExportServiceTests()
+    {
+        loggerMock = new Mock<ILogger<CsvExportService>>();
+        settings = new PowerPositionSettings
+        {
+            OutputFolder = Path.Combine(Path.GetTempPath(), $"test_output_{Guid.NewGuid()}"),
+            TimeZoneId = "Europe/London"
+        };
+        service = new CsvExportService(loggerMock.Object, settings);
+    }
+
     [Fact]
     public async Task ExportAsync_CreatesOutputFolder_WhenFolderDoesNotExist()
     {
-        // Arrange
-        var loggerMock = new Mock<ILogger<CsvExportService>>();
-        var outputFolder = Path.Combine(Path.GetTempPath(), $"test_output_{Guid.NewGuid()}");
-
         var aggregatedTrades = new Dictionary<int, double>
         {
             { 0, 100 },
             { 1, 150 }
         };
 
-        var service = new CsvExportService(loggerMock.Object);
         try
         {
-            // Act
-            await service.ExportAsync(aggregatedTrades, outputFolder);
+            await service.ExportAsync(aggregatedTrades, settings.OutputFolder);
 
-            // Assert
-            Assert.True(Directory.Exists(outputFolder));
+            Assert.True(Directory.Exists(settings.OutputFolder));
         }
         finally
         {
-            // Cleanup
-            if (Directory.Exists(outputFolder))
+            if (Directory.Exists(settings.OutputFolder))
             {
-                Directory.Delete(outputFolder, true);
+                Directory.Delete(settings.OutputFolder, true);
             }
         }
     }
@@ -38,26 +46,18 @@ public class CsvExportServiceTests
     [Fact]
     public async Task ExportAsync_CreatesCsvFile_WithCorrectContent()
     {
-        // Arrange
-        var loggerMock = new Mock<ILogger<CsvExportService>>();
-        var outputFolder = Path.Combine(Path.GetTempPath(), $"test_output_{Guid.NewGuid()}");
-        Directory.CreateDirectory(outputFolder);
+        Directory.CreateDirectory(settings.OutputFolder);
 
         var aggregatedTrades = new Dictionary<int, double>
         {
             { 0, 100.5 },
             { 1, 200.75 }
         };
-
-        var service = new CsvExportService(loggerMock.Object);
-
         try
         {
-            // Act
-            await service.ExportAsync(aggregatedTrades, outputFolder);
+            await service.ExportAsync(aggregatedTrades, settings.OutputFolder);
 
-            // Assert
-            var files = Directory.GetFiles(outputFolder, "PowerPosition_*.csv");
+            var files = Directory.GetFiles(settings.OutputFolder, "PowerPosition_*.csv");
             Assert.Single(files);
 
             var content = await File.ReadAllLinesAsync(files[0]);
@@ -68,9 +68,9 @@ public class CsvExportServiceTests
         }
         finally
         {
-            if (Directory.Exists(outputFolder))
+            if (Directory.Exists(settings.OutputFolder))
             {
-                Directory.Delete(outputFolder, true);
+                Directory.Delete(settings.OutputFolder, true);
             }
         }
     }
@@ -78,22 +78,15 @@ public class CsvExportServiceTests
     [Fact]
     public async Task ExportAsync_WithEmptyTrades_CreatesFileWithHeaderOnly()
     {
-        // Arrange
-        var loggerMock = new Mock<ILogger<CsvExportService>>();
-        var outputFolder = Path.Combine(Path.GetTempPath(), $"test_output_{Guid.NewGuid()}");
-        Directory.CreateDirectory(outputFolder);
+        Directory.CreateDirectory(settings.OutputFolder);
 
         var aggregatedTrades = new Dictionary<int, double>();
 
-        var service = new CsvExportService(loggerMock.Object);
-
         try
         {
-            // Act
-            await service.ExportAsync(aggregatedTrades, outputFolder);
+            await service.ExportAsync(aggregatedTrades, settings.OutputFolder);
 
-            // Assert
-            var files = Directory.GetFiles(outputFolder, "PowerPosition_*.csv");
+            var files = Directory.GetFiles(settings.OutputFolder, "PowerPosition_*.csv");
             Assert.Single(files);
 
             var content = await File.ReadAllLinesAsync(files[0]);
@@ -102,9 +95,9 @@ public class CsvExportServiceTests
         }
         finally
         {
-            if (Directory.Exists(outputFolder))
+            if (Directory.Exists(settings.OutputFolder))
             {
-                Directory.Delete(outputFolder, true);
+                Directory.Delete(settings.OutputFolder, true);
             }
         }
     }
