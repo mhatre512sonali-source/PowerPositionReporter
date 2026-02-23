@@ -10,10 +10,10 @@ namespace PowerPositionTest;
 [Collection("PowerPositionTests")]
 public class PowerTradeProcessorTests
 {
-    private PowerPositionSettings settings;
-    private Mock<ILogger<PowerTradeProcessor>> loggerMock;
-    private Mock<IPowerService> powerServiceMock;
-    private PowerTradeProcessor processor;
+    private readonly PowerPositionSettings settings;
+    private readonly Mock<ILogger<PowerTradeProcessor>> loggerMock;
+    private readonly Mock<IPowerService> powerServiceMock;
+    private readonly PowerTradeProcessor processor;
 
     public PowerTradeProcessorTests()
     {

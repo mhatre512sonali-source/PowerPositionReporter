@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 [Collection("PowerPositionTests")]
 public class CsvExportServiceTests
 {
-    private PowerPositionSettings settings;
-    private Mock<ILogger<CsvExportService>> loggerMock;
-    private CsvExportService service;
+    private readonly PowerPositionSettings settings;
+    private readonly Mock<ILogger<CsvExportService>> loggerMock;
+    private readonly CsvExportService service;
 
     public CsvExportServiceTests()
     {
